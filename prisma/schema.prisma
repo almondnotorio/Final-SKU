@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model SKU {
+  id               String    @id @default(cuid())
+  sku              String    @unique
+  name             String
+  description      String?   @db.Text
+  shortDescription String?
+  categoryId       String
+  category         Category  @relation(fields: [categoryId], references: [id])
+  retailPrice      Decimal   @db.Decimal(10, 2)
+  wholesalePrice   Decimal?  @db.Decimal(10, 2)
+  msrp             Decimal?  @db.Decimal(10, 2)
+  thumbnail        String?
+  images           Image[]
+  status           SKUStatus @default(ACTIVE)
+  stockQuantity    Int       @default(0)
+  // Dimensions (inches)
+  width            Decimal?  @db.Decimal(8, 2)
+  height           Decimal?  @db.Decimal(8, 2)
+  depth            Decimal?  @db.Decimal(8, 2)
+  weight           Decimal?  @db.Decimal(8, 2)
+  // Mailbox-specific fields
+  color            String?
+  material         String?
+  finish           String?
+  mountingType     MountingType?
+  numberOfDoors    Int?
+  lockType         String?
+  postalApproved   Boolean   @default(false)
+  // Arrays stored as JSON-compatible text[]
+  features         String[]
+  tags             String[]
+  // Metadata
+  createdBy        String    // Clerk user ID
+  updatedBy        String?   // Clerk user ID
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([sku])
+  @@index([status])
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  skus        SKU[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String?
+  isPrimary Boolean  @default(false)
+  order     Int      @default(0)
+  skuId     String
+  sku       SKU      @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([skuId])
+}
+
+enum SKUStatus {
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+  OUT_OF_STOCK
+}
+
+enum MountingType {
+  POST
+  WALL
+  PEDESTAL
+  IN_GROUND
+  SURFACE
+  RECESSED
+}
