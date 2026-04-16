@@ -80,7 +80,7 @@ export default function SKUsPage() {
           </Button>
         }
       />
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         <SKUFilters
           categories={categories}
           viewMode={viewMode}

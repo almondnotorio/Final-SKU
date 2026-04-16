@@ -143,7 +143,7 @@ export default function CategoriesPage() {
         }
       />
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {loading ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 4 }).map((_, i) => (

@@ -11,6 +11,7 @@ import {
   Signpost,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -45,20 +46,25 @@ const navItems = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  return (
+  const sidebarContent = (
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "relative flex flex-col border-r bg-sidebar transition-all duration-300",
+          "relative flex h-full flex-col border-r bg-sidebar transition-all duration-300",
           collapsed ? "w-16" : "w-60"
         )}
       >
         {/* Logo */}
-        <div className="flex min-h-16 items-center border-b border-sidebar-border px-4 py-3">
+        <div className="flex min-h-16 items-center justify-between border-b border-sidebar-border px-4 py-3">
           {collapsed ? (
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary">
               <Signpost className="h-4 w-4 text-primary-foreground" />
@@ -78,6 +84,19 @@ export function Sidebar() {
               </p>
             </div>
           )}
+
+          {/* Mobile close button */}
+          {onMobileClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMobileClose}
+              className="md:hidden ml-2 shrink-0"
+              aria-label="Close menu"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -92,6 +111,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onMobileClose}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2.5 text-xs font-medium tracking-wider uppercase transition-colors",
                   isActive
@@ -117,12 +137,12 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Collapse toggle */}
+        {/* Collapse toggle — desktop only */}
         <Button
           variant="ghost"
           size="icon-sm"
           onClick={() => setCollapsed((c) => !c)}
-          className="absolute -right-3 top-20 z-10 h-6 w-6 rounded-full border bg-background shadow-sm"
+          className="absolute -right-3 top-20 z-10 hidden h-6 w-6 rounded-full border bg-background shadow-sm md:flex"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
@@ -133,5 +153,22 @@ export function Sidebar() {
         </Button>
       </aside>
     </TooltipProvider>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible */}
+      <div className="hidden md:block">{sidebarContent}</div>
+
+      {/* Mobile drawer */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 md:hidden transition-transform duration-300",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {sidebarContent}
+      </div>
+    </>
   );
 }

@@ -66,7 +66,7 @@ export default async function SKUDetailPage({ params }: Props) {
         }
       />
 
-      <div className="mx-auto max-w-5xl space-y-6 p-6 animate-fade-in">
+      <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6 animate-fade-in">
         <div className="grid gap-6 lg:grid-cols-5">
           {/* Images */}
           <div className="lg:col-span-2 space-y-3">

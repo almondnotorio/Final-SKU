@@ -21,7 +21,7 @@ export default async function NewSKUPage() {
         title="Create New SKU"
         description="Add a new signage product to your catalog"
       />
-      <div className="mx-auto max-w-4xl p-6">
+      <div className="mx-auto max-w-4xl p-4 md:p-6">
         {categories.length === 0 ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
             <p className="font-medium text-amber-800">No categories found</p>

@@ -138,21 +138,21 @@ async function DashboardStats() {
                 <Link
                   key={sku.id}
                   href={`/skus/${sku.id}`}
-                  className="flex items-center justify-between px-6 py-3 hover:bg-muted/40 transition-colors"
+                  className="flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors md:px-6"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-md border bg-secondary">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-secondary">
                       <Package className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{sku.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{sku.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
                         {sku.sku} · {sku.category.name}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium">{formatCurrency(sku.retailPrice)}</span>
+                  <div className="flex shrink-0 items-center gap-2 md:gap-4">
+                    <span className="hidden text-sm font-medium sm:inline">{formatCurrency(sku.retailPrice)}</span>
                     <span
                       className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${getStatusColor(sku.status)}`}
                     >
@@ -204,7 +204,7 @@ export default function DashboardPage() {
           </Button>
         }
       />
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <Suspense fallback={<StatsSkeleton />}>
           <DashboardStats />
         </Suspense>

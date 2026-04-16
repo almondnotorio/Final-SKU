@@ -40,7 +40,7 @@ export default async function EditSKUPage({ params }: Props) {
         title={`Edit: ${sku.name}`}
         description={`SKU Code: ${sku.sku}`}
       />
-      <div className="mx-auto max-w-4xl p-6">
+      <div className="mx-auto max-w-4xl p-4 md:p-6">
         <SKUForm categories={categories} initialData={sku} mode="edit" />
       </div>
     </>
