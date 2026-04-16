@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -43,6 +44,11 @@ const navItems = [
     label: "Categories",
     href: "/categories",
     icon: Tag,
+  },
+  {
+    label: "API Keys",
+    href: "/api-keys",
+    icon: KeyRound,
   },
 ];
 

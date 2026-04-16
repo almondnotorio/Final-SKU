@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { resolveAuth } from "@/lib/resolve-auth";
 import { createCategorySchema } from "@/lib/validations";
 import {
   successResponse,
@@ -11,12 +11,11 @@ import {
 import { ZodError } from "zod";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    if (!await resolveAuth(request)) return unauthorizedResponse();
 
     const { id } = await params;
     const category = await prisma.category.findUnique({
@@ -37,8 +36,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    if (!await resolveAuth(request)) return unauthorizedResponse();
 
     const { id } = await params;
     const existing = await prisma.category.findUnique({ where: { id } });
@@ -65,12 +63,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    if (!await resolveAuth(request)) return unauthorizedResponse();
 
     const { id } = await params;
     const existing = await prisma.category.findUnique({

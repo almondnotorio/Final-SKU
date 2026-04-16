@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { resolveAuth } from "@/lib/resolve-auth";
 import { createSKUSchema } from "@/lib/validations";
 import {
   successResponse,
@@ -10,24 +10,18 @@ import {
 } from "@/lib/api-response";
 import { ZodError } from "zod";
 
-// GET /api/skus/[id] - Get a single SKU by ID
+// GET /api/skus/[id]
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    if (!await resolveAuth(request)) return unauthorizedResponse();
 
     const { id } = await params;
     const sku = await prisma.sKU.findUnique({
       where: { id },
-      include: {
-        category: true,
-        images: {
-          orderBy: { order: "asc" },
-        },
-      },
+      include: { category: true, images: { orderBy: { order: "asc" } } },
     });
 
     if (!sku) return notFoundResponse("SKU");
@@ -38,14 +32,15 @@ export async function GET(
   }
 }
 
-// PUT /api/skus/[id] - Update a SKU
+// PUT /api/skus/[id]
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    const resolved = await resolveAuth(request);
+    if (!resolved) return unauthorizedResponse();
+    const { userId } = resolved;
 
     const { id } = await params;
     const existing = await prisma.sKU.findUnique({ where: { id } });
@@ -54,28 +49,20 @@ export async function PUT(
     const body = await request.json();
     const data = createSKUSchema.parse(body);
 
-    // Check SKU code uniqueness (allow same SKU to keep its own code)
     if (data.sku !== existing.sku) {
       const duplicate = await prisma.sKU.findUnique({ where: { sku: data.sku } });
-      if (duplicate) {
-        return errorResponse("SKU code already in use by another product.", 409);
-      }
+      if (duplicate) return errorResponse("SKU code already in use by another product.", 409);
     }
 
-    // Verify category exists
-    const category = await prisma.category.findUnique({
-      where: { id: data.categoryId },
-    });
+    const category = await prisma.category.findUnique({ where: { id: data.categoryId } });
     if (!category) return errorResponse("Category not found.", 404);
 
     const { images: imageData, thumbnail } = body;
 
-    // Use a transaction to update SKU and replace images atomically
     const updated = await prisma.$transaction(async (tx) => {
       if (imageData !== undefined) {
         await tx.image.deleteMany({ where: { skuId: id } });
       }
-
       return tx.sKU.update({
         where: { id },
         data: {
@@ -95,10 +82,7 @@ export async function PUT(
             },
           }),
         },
-        include: {
-          category: true,
-          images: { orderBy: { order: "asc" } },
-        },
+        include: { category: true, images: { orderBy: { order: "asc" } } },
       });
     });
 
@@ -118,14 +102,15 @@ export async function PUT(
   }
 }
 
-// PATCH /api/skus/[id] - Partial update (e.g. status change)
+// PATCH /api/skus/[id]
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    const resolved = await resolveAuth(request);
+    if (!resolved) return unauthorizedResponse();
+    const { userId } = resolved;
 
     const { id } = await params;
     const existing = await prisma.sKU.findUnique({ where: { id } });
@@ -156,22 +141,19 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/skus/[id] - Delete a SKU
+// DELETE /api/skus/[id]
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    if (!await resolveAuth(request)) return unauthorizedResponse();
 
     const { id } = await params;
     const existing = await prisma.sKU.findUnique({ where: { id } });
     if (!existing) return notFoundResponse("SKU");
 
-    // Images cascade delete via Prisma schema (onDelete: Cascade)
     await prisma.sKU.delete({ where: { id } });
-
     return successResponse({ id, deleted: true });
   } catch (err) {
     console.error("[DELETE /api/skus/:id]", err);

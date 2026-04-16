@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { resolveAuth } from "@/lib/resolve-auth";
 import { createCategorySchema } from "@/lib/validations";
 import {
   successResponse,
@@ -10,16 +10,13 @@ import {
 import { ZodError } from "zod";
 
 // GET /api/categories
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    if (!await resolveAuth(request)) return unauthorizedResponse();
 
     const categories = await prisma.category.findMany({
       orderBy: { name: "asc" },
-      include: {
-        _count: { select: { skus: true } },
-      },
+      include: { _count: { select: { skus: true } } },
     });
 
     return successResponse(categories);
@@ -32,8 +29,7 @@ export async function GET() {
 // POST /api/categories
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    if (!await resolveAuth(request)) return unauthorizedResponse();
 
     const body = await request.json();
     const data = createCategorySchema.parse(body);
@@ -50,10 +46,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const category = await prisma.category.create({
-      data,
-    });
-
+    const category = await prisma.category.create({ data });
     return successResponse(category, undefined, 201);
   } catch (err) {
     if (err instanceof ZodError) {

@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { resolveAuth } from "@/lib/resolve-auth";
 import { createSKUSchema, skuQuerySchema } from "@/lib/validations";
 import {
   successResponse,
@@ -12,8 +12,7 @@ import { ZodError } from "zod";
 // GET /api/skus - List all SKUs with filtering, sorting, pagination
 export async function GET(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    if (!await resolveAuth(request)) return unauthorizedResponse();
 
     const { searchParams } = new URL(request.url);
     const query = skuQuerySchema.parse({
@@ -93,8 +92,9 @@ export async function GET(request: Request) {
 // POST /api/skus - Create a new SKU
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) return unauthorizedResponse();
+    const resolved = await resolveAuth(request);
+    if (!resolved) return unauthorizedResponse();
+    const { userId } = resolved;
 
     const body = await request.json();
     const data = createSKUSchema.parse(body);
