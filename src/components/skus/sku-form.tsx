@@ -221,7 +221,7 @@ export function SKUForm({ categories, initialData, mode }: SKUFormProps) {
           >
             <Input
               id="name"
-              placeholder="e.g. Classic Residential Mailbox"
+              placeholder="e.g. Classic Outdoor Signage Board"
               {...register("name")}
               error={errors.name?.message}
             />

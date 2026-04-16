@@ -71,7 +71,7 @@ export default function SKUsPage() {
     <>
       <Header
         title="SKU Catalog"
-        description="Manage all your mailbox products"
+        description="Manage all your signage products"
         actions={
           <Button asChild size="sm">
             <Link href="/skus/new">

@@ -1,33 +1,40 @@
 import { SignIn } from "@clerk/nextjs";
-import { MailboxIcon } from "lucide-react";
+import { Signpost } from "lucide-react";
 
 export default function SignInPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-[#1A1410] p-4">
+      {/* Subtle warm texture overlay */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#3a2a1a33_0%,_transparent_70%)]" />
+
+      <div className="relative w-full max-w-md">
         {/* Brand header */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
-            <MailboxIcon className="h-7 w-7 text-white" />
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-md bg-[#C24B2F]">
+            <Signpost className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">SKU Manager</h1>
-          <p className="mt-1 text-sm text-slate-400">Mailbox Catalog Management</p>
+          <h1 className="font-playfair text-3xl font-semibold text-[#F5EEE3]">
+            SKU Manager
+          </h1>
+          <p className="mt-1.5 text-xs tracking-[0.2em] uppercase text-[#9A8A78]">
+            Signages Catalog
+          </p>
         </div>
 
         <SignIn
           appearance={{
             elements: {
               rootBox: "w-full",
-              card: "rounded-xl shadow-2xl border border-white/10 bg-white/5 backdrop-blur-md",
-              headerTitle: "text-white",
-              headerSubtitle: "text-slate-400",
+              card: "rounded-md shadow-2xl border border-white/10 bg-white/5 backdrop-blur-md",
+              headerTitle: "text-[#F5EEE3]",
+              headerSubtitle: "text-[#9A8A78]",
               socialButtonsBlockButton:
-                "border-white/20 bg-white/5 text-white hover:bg-white/10",
-              formFieldLabel: "text-slate-300",
+                "border-white/20 bg-white/5 text-[#F5EEE3] hover:bg-white/10",
+              formFieldLabel: "text-[#C8BAA8]",
               formFieldInput:
-                "bg-white/5 border-white/20 text-white placeholder:text-slate-500 focus:border-blue-500",
-              footerActionLink: "text-blue-400 hover:text-blue-300",
-              formButtonPrimary: "bg-blue-600 hover:bg-blue-700",
+                "bg-white/5 border-white/20 text-[#F5EEE3] placeholder:text-[#6B5E52] focus:border-[#C24B2F]",
+              footerActionLink: "text-[#C24B2F] hover:text-[#D96040]",
+              formButtonPrimary: "bg-[#C24B2F] hover:bg-[#A83C24]",
             },
           }}
         />

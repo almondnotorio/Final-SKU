@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
-import { Upload, X, Star, Loader2, ImageIcon } from "lucide-react";
+import { Upload, X, Star, Loader2, ImageIcon, AlertCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -22,6 +22,12 @@ interface ImageUploadProps {
   disabled?: boolean;
 }
 
+interface UploadError {
+  title: string;
+  message: string;
+  hint: string;
+}
+
 export function ImageUpload({
   value,
   onChange,
@@ -30,22 +36,46 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState<UploadError | null>(null);
+
+  const clearError = () => setUploadError(null);
 
   const uploadFiles = useCallback(
     async (files: File[]) => {
       if (files.length === 0) return;
+      setUploadError(null);
+
       if (value.length + files.length > maxImages) {
-        toast.error(`Maximum ${maxImages} images allowed`);
+        const err: UploadError = {
+          title: "Too many images",
+          message: `You can only upload up to ${maxImages} images per SKU.`,
+          hint: `Remove some existing images first, then try again.`,
+        };
+        setUploadError(err);
+        toast.error(err.title, { description: err.hint });
         return;
       }
 
       const validFiles = files.filter((f) => {
         if (!f.type.startsWith("image/")) {
-          toast.error(`${f.name} is not an image file`);
+          const err: UploadError = {
+            title: "Unsupported file type",
+            message: `"${f.name}" is not an image file.`,
+            hint: "Only PNG, JPG, JPEG, and WEBP files are supported. Convert your file and try again.",
+          };
+          setUploadError(err);
+          toast.error(err.title, { description: err.hint });
           return false;
         }
         if (f.size > 10 * 1024 * 1024) {
-          toast.error(`${f.name} exceeds 10MB limit`);
+          const sizeMB = (f.size / (1024 * 1024)).toFixed(1);
+          const err: UploadError = {
+            title: "File too large",
+            message: `"${f.name}" is ${sizeMB}MB — the limit is 10MB.`,
+            hint: "Compress or resize the image using a tool like Squoosh, TinyPNG, or your photo editor, then try again.",
+          };
+          setUploadError(err);
+          toast.error(err.title, { description: err.hint });
           return false;
         }
         return true;
@@ -64,8 +94,37 @@ export function ImageUpload({
             body: formData,
           });
           if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || "Upload failed");
+            const data = await res.json().catch(() => ({}));
+            const status = res.status;
+            let err: UploadError;
+            if (status === 413) {
+              err = {
+                title: "File too large for server",
+                message: "The server rejected the file because it exceeds the allowed size.",
+                hint: "Compress or resize the image below 10MB and try again.",
+              };
+            } else if (status === 401 || status === 403) {
+              err = {
+                title: "Upload not authorized",
+                message: "You don't have permission to upload images.",
+                hint: "Make sure you're signed in and your account has upload access.",
+              };
+            } else if (status >= 500) {
+              err = {
+                title: "Server error",
+                message: "The upload service is currently unavailable.",
+                hint: "Wait a moment and try again. If the issue persists, contact support.",
+              };
+            } else {
+              err = {
+                title: "Upload failed",
+                message: data.error || `Unexpected error (${status}).`,
+                hint: "Try again. If the problem continues, check your internet connection or contact support.",
+              };
+            }
+            setUploadError(err);
+            toast.error(err.title, { description: err.hint });
+            return;
           }
           const data = await res.json();
           uploaded.push({
@@ -75,14 +134,19 @@ export function ImageUpload({
           });
         }
         const newImages = [...value, ...uploaded];
-        // If no primary set, make first one primary
         if (!newImages.some((img) => img.isPrimary) && newImages.length > 0) {
           newImages[0].isPrimary = true;
         }
         onChange(newImages);
-        toast.success(`${uploaded.length} image(s) uploaded`);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Upload failed");
+        toast.success(`${uploaded.length} image(s) uploaded successfully`);
+      } catch {
+        const err: UploadError = {
+          title: "Network error",
+          message: "The upload could not be completed.",
+          hint: "Check your internet connection and try again. If the problem persists, try a different browser.",
+        };
+        setUploadError(err);
+        toast.error(err.title, { description: err.hint });
       } finally {
         setUploading(false);
       }
@@ -99,6 +163,7 @@ export function ImageUpload({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
+    setUploadError(null);
     const files = Array.from(e.dataTransfer.files);
     uploadFiles(files);
   };
@@ -129,6 +194,28 @@ export function ImageUpload({
 
   return (
     <div className="space-y-3">
+      {/* Inline error alert */}
+      {uploadError && (
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/8 px-4 py-3">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <div className="flex-1 space-y-0.5">
+            <p className="text-sm font-semibold text-destructive">{uploadError.title}</p>
+            <p className="text-xs text-destructive/80">{uploadError.message}</p>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium">What to do:</span> {uploadError.hint}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={clearError}
+            className="shrink-0 text-destructive/60 hover:text-destructive transition-colors"
+            aria-label="Dismiss error"
+          >
+            <XCircle className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Upload zone */}
       {value.length < maxImages && (
         <label

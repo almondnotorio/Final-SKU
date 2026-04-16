@@ -135,7 +135,7 @@ export default function CategoriesPage() {
     <>
       <Header
         title="Categories"
-        description="Organize your mailbox products into categories"
+        description="Organize your signage products into categories"
         actions={
           <Button size="sm" onClick={openCreate}>
             <Plus className="h-4 w-4" /> New Category
@@ -242,7 +242,7 @@ export default function CategoriesPage() {
                     slug: editingId ? f.slug : slugify(e.target.value),
                   }));
                 }}
-                placeholder="e.g. Residential Mailboxes"
+                placeholder="e.g. Outdoor Signages"
                 error={errors.name}
               />
             </FormField>
@@ -257,7 +257,7 @@ export default function CategoriesPage() {
                 id="cat-slug"
                 value={form.slug}
                 onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase() }))}
-                placeholder="e.g. residential-mailboxes"
+                placeholder="e.g. outdoor-signages"
                 className="font-mono"
                 error={errors.slug}
               />

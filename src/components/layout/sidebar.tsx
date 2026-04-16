@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
   Plus,
   Tag,
-  Settings,
-  MailboxIcon,
+  Signpost,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -58,26 +58,30 @@ export function Sidebar() {
         )}
       >
         {/* Logo */}
-        <div className="flex h-16 items-center border-b px-4">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-              <MailboxIcon className="h-4 w-4 text-primary-foreground" />
+        <div className="flex min-h-16 items-center border-b border-sidebar-border px-4 py-3">
+          {collapsed ? (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary">
+              <Signpost className="h-4 w-4 text-primary-foreground" />
             </div>
-            {!collapsed && (
-              <div className="overflow-hidden">
-                <p className="truncate text-sm font-semibold text-sidebar-foreground">
-                  SKU Manager
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  Mailbox Catalog
-                </p>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="flex w-full flex-col gap-1.5 overflow-hidden">
+              <Image
+                src="/proveli-logo.png"
+                alt="Proveli"
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain object-left"
+                priority
+              />
+              <p className="truncate text-[10px] tracking-[0.18em] uppercase text-sidebar-foreground opacity-40">
+                Signages Catalog
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 space-y-0.5 p-3">
           {navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
@@ -89,7 +93,7 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-xs font-medium tracking-wider uppercase transition-colors",
                   isActive
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",

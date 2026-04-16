@@ -41,15 +41,15 @@ async function DashboardStats() {
       label: "Total SKUs",
       value: totalSKUs,
       icon: Package,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-[#C24B2F]",
+      bg: "bg-[#C24B2F]/10",
       href: "/skus",
     },
     {
       label: "Active SKUs",
       value: activeSKUs,
       icon: CheckCircle2,
-      color: "text-emerald-600",
+      color: "text-emerald-700",
       bg: "bg-emerald-50",
       href: "/skus?status=ACTIVE",
     },
@@ -57,7 +57,7 @@ async function DashboardStats() {
       label: "Out of Stock",
       value: outOfStock,
       icon: AlertTriangle,
-      color: "text-amber-600",
+      color: "text-amber-700",
       bg: "bg-amber-50",
       href: "/skus?status=OUT_OF_STOCK",
     },
@@ -65,7 +65,7 @@ async function DashboardStats() {
       label: "Discontinued",
       value: discontinued,
       icon: XCircle,
-      color: "text-red-600",
+      color: "text-red-700",
       bg: "bg-red-50",
       href: "/skus?status=DISCONTINUED",
     },
@@ -73,8 +73,8 @@ async function DashboardStats() {
       label: "Categories",
       value: totalCategories,
       icon: Tag,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
+      color: "text-stone-700",
+      bg: "bg-stone-100",
       href: "/categories",
     },
   ];
@@ -85,14 +85,18 @@ async function DashboardStats() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat) => (
           <Link key={stat.label} href={stat.href}>
-            <Card className="transition-shadow hover:shadow-md cursor-pointer">
+            <Card className="transition-all hover:shadow-md cursor-pointer border-border/60 bg-card">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
-                    <p className="mt-1 text-3xl font-bold">{stat.value}</p>
+                    <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground">
+                      {stat.label}
+                    </p>
+                    <p className="mt-1.5 font-playfair text-3xl font-bold text-foreground">
+                      {stat.value}
+                    </p>
                   </div>
-                  <div className={`rounded-xl ${stat.bg} p-3`}>
+                  <div className={`rounded-md ${stat.bg} p-3`}>
                     <stat.icon className={`h-5 w-5 ${stat.color}`} />
                   </div>
                 </div>
@@ -103,9 +107,11 @@ async function DashboardStats() {
       </div>
 
       {/* Recent SKUs */}
-      <Card>
+      <Card className="border-border/60">
         <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <CardTitle className="text-base">Recently Added SKUs</CardTitle>
+          <CardTitle className="font-playfair text-base font-semibold">
+            Recently Added SKUs
+          </CardTitle>
           <Button asChild variant="ghost" size="sm">
             <Link href="/skus">
               View all <ArrowRight className="h-3.5 w-3.5" />
@@ -115,10 +121,10 @@ async function DashboardStats() {
         <CardContent className="p-0">
           {recentSKUs.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
-              <Package className="h-10 w-10 opacity-30" />
+              <Package className="h-10 w-10 opacity-20" />
               <div className="text-center">
                 <p className="font-medium">No SKUs yet</p>
-                <p className="text-sm">Create your first mailbox SKU to get started</p>
+                <p className="text-sm">Create your first signage SKU to get started</p>
               </div>
               <Button asChild size="sm">
                 <Link href="/skus/new">
@@ -127,15 +133,15 @@ async function DashboardStats() {
               </Button>
             </div>
           ) : (
-            <div className="divide-y">
+            <div className="divide-y divide-border/60">
               {recentSKUs.map((sku) => (
                 <Link
                   key={sku.id}
                   href={`/skus/${sku.id}`}
-                  className="flex items-center justify-between px-6 py-3 hover:bg-muted/30 transition-colors"
+                  className="flex items-center justify-between px-6 py-3 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-md border bg-secondary">
                       <Package className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
@@ -189,7 +195,7 @@ export default function DashboardPage() {
     <>
       <Header
         title="Dashboard"
-        description="Overview of your mailbox SKU catalog"
+        description="Overview of your signages catalog"
         actions={
           <Button asChild size="sm">
             <Link href="/skus/new">

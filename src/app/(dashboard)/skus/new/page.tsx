@@ -19,7 +19,7 @@ export default async function NewSKUPage() {
     <>
       <Header
         title="Create New SKU"
-        description="Add a new mailbox product to your catalog"
+        description="Add a new signage product to your catalog"
       />
       <div className="mx-auto max-w-4xl p-6">
         {categories.length === 0 ? (
