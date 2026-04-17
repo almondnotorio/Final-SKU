@@ -518,47 +518,7 @@ export function OrderChat() {
           )}
         </div>
 
-        {/* Chips area */}
-        <div className="flex-1 overflow-y-auto px-4 pb-2">
-          {hasInput && (
-            <>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Parsed Attributes
-                <span className="ml-1.5 font-normal normal-case opacity-60">
-                  — remove or add chips to refine matching
-                </span>
-              </p>
-
-              {catalogChips.length === 0 && allFlags.length === 0 && (
-                <p className="text-xs text-muted-foreground italic">
-                  No matchable attributes detected yet…
-                </p>
-              )}
-
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {catalogChips.map((chip) => (
-                  <ChipItem key={chip.id} chip={chip} onRemove={removeChip} />
-                ))}
-                <AddChipForm onAdd={addChip} />
-              </div>
-
-              {/* Flags */}
-              {allFlags.length > 0 && (
-                <div className="space-y-1">
-                  {allFlags.map((flag, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-100 px-2.5 py-1.5 text-xs text-amber-700"
-                    >
-                      <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
-                      {flag}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <div className="flex-1" />
 
         {/* Submit */}
         <div className="border-t p-4 shrink-0">
