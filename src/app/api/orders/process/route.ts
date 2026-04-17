@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import {
@@ -7,7 +7,7 @@ import {
   unauthorizedResponse,
 } from "@/lib/api-response";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(request: Request) {
   try {
@@ -94,14 +94,16 @@ Return a JSON object with this exact structure:
 
     async function tryCallAI(): Promise<AiResult> {
       try {
-        const message = await anthropic.messages.create({
-          model: "claude-sonnet-4-6",
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
           max_tokens: 1024,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userPrompt }],
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" },
         });
-        const responseText =
-          message.content[0].type === "text" ? message.content[0].text : "";
+        const responseText = completion.choices[0]?.message?.content ?? "";
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         return JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
       } catch {
