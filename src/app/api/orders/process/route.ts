@@ -36,7 +36,7 @@ export async function POST(request: Request) {
         retailPrice: true, color: true, material: true, finish: true,
         mountingType: true, numberOfDoors: true, lockType: true,
         postalApproved: true, tags: true, features: true,
-        width: true, height: true,
+        width: true, height: true, depth: true, weight: true,
         category: { select: { name: true } },
       },
     });
@@ -46,6 +46,8 @@ export async function POST(request: Request) {
       retailPrice: Number(s.retailPrice),
       width: s.width ? Number(s.width) : null,
       height: s.height ? Number(s.height) : null,
+      depth: s.depth ? Number(s.depth) : null,
+      weight: s.weight ? Number(s.weight) : null,
     }));
 
     const scored = matchSKUs(mergedAttrs, skus, normalized);

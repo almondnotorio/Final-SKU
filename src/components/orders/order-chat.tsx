@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { normalizeInput, parseOrder, attrsToEntries, type ParsedOrderAttributes } from "@/lib/order-parser";
-import { matchSKUs, type MatchableSKU, type ScoredSKU } from "@/lib/sku-matcher";
+import { matchSKUs, type MatchableSKU, type ScoredSKU, type AttributeMatchDetail } from "@/lib/sku-matcher";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -153,6 +153,40 @@ function AddChipForm({ onAdd }: { onAdd: (key: string, value: string) => void })
   );
 }
 
+function AttributeCell({ attr }: { attr: AttributeMatchDetail }) {
+  const bg =
+    attr.matched === true  ? "bg-emerald-50" :
+    attr.matched === false ? "bg-red-50"     :
+                             "bg-card";
+  const labelCls =
+    attr.matched === true  ? "text-emerald-600" :
+    attr.matched === false ? "text-red-500"     :
+                             "text-muted-foreground";
+  const icon =
+    attr.matched === true  ? <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" /> :
+    attr.matched === false ? <XCircle      className="h-2.5 w-2.5 text-red-400    shrink-0" /> :
+                             null;
+
+  return (
+    <div className={cn("flex flex-col gap-0.5 px-2 py-1.5", bg)}>
+      <span className={cn("font-semibold uppercase tracking-wide text-[9px]", labelCls)}>
+        {attr.label}
+      </span>
+      <div className="flex items-center gap-1">
+        {icon}
+        <span className="font-medium text-foreground truncate">
+          {attr.skuValue ?? <span className="text-muted-foreground italic">—</span>}
+        </span>
+      </div>
+      {attr.matched === false && attr.orderedValue && (
+        <span className="text-[9px] text-red-400 truncate">
+          ordered: {attr.orderedValue}
+        </span>
+      )}
+    </div>
+  );
+}
+
 const SCORE_CONFIG = {
   high:   { className: "bg-emerald-500", label: "MATCHED",       Icon: CheckCircle2, textCls: "text-emerald-700" },
   mid:    { className: "bg-amber-500",   label: "PARTIAL MATCH", Icon: HelpCircle,   textCls: "text-amber-700" },
@@ -212,21 +246,12 @@ function SKUMatchCard({ scored, rank }: { scored: ScoredSKU; rank: number }) {
         />
       </div>
 
-      {/* Matched / unmatched chips */}
-      {(scored.matchedAttributes.length > 0 || scored.unmatchedAttributes.length > 0) && (
-        <div className="flex flex-wrap gap-1">
-          {scored.matchedAttributes.map((a) => (
-            <span key={a} className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] text-emerald-700">
-              <CheckCircle2 className="h-2.5 w-2.5" /> {a}
-            </span>
-          ))}
-          {scored.unmatchedAttributes.map((a) => (
-            <span key={a} className="inline-flex items-center gap-0.5 rounded-full bg-muted border px-1.5 py-0.5 text-[10px] text-muted-foreground line-through">
-              {a}
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Attribute grid — 8 fields */}
+      <div className="grid grid-cols-4 gap-px rounded-md overflow-hidden border bg-border text-[11px]">
+        {scored.attributeGrid.map((attr) => (
+          <AttributeCell key={attr.key} attr={attr} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -276,6 +301,8 @@ export function OrderChat() {
             features: (s.features as string[]) ?? [],
             width: s.width ? Number(s.width) : null,
             height: s.height ? Number(s.height) : null,
+            depth: s.depth ? Number(s.depth) : null,
+            weight: s.weight ? Number(s.weight) : null,
           }))
         );
       })

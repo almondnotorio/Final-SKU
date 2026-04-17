@@ -14,9 +14,11 @@ export interface ParsedOrderAttributes {
   postalApproved?: boolean;
   category?: string;
   quantity?: number;
-  // Dimension fields
+  // Dimension fields (cm / kg — matches DB units)
   width?: number;
   height?: number;
+  depth?: number;
+  weight?: number;
   thickness?: number;
   // Signage-specific (not in mailbox catalog → flags)
   reflectivity?: string;
@@ -193,12 +195,31 @@ export function parseOrder(normalized: string): ParseResult {
 
   // ── Regex extractors ──
 
-  // Size: "6x18" → width=6, height=18
-  const sizeMatch = normalized.match(/(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)/i);
+  // Size: "6x18" or "6x18x2" (WxH or WxHxD)
+  const sizeMatch = normalized.match(
+    /(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)(?:\s*x\s*(\d+(?:\.\d+)?))?/i
+  );
   if (sizeMatch) {
-    attrs.width = parseFloat(sizeMatch[1]);
+    attrs.width  = parseFloat(sizeMatch[1]);
     attrs.height = parseFloat(sizeMatch[2]);
+    if (sizeMatch[3]) attrs.depth = parseFloat(sizeMatch[3]);
   }
+
+  // Depth standalone: "depth 5", "5cm depth", "5 cm deep", "depth: 5"
+  if (!attrs.depth) {
+    const depthMatch = normalized.match(
+      /(?:depth[:\s]+(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*cm\s+deep(?:th)?)/i
+    );
+    if (depthMatch) attrs.depth = parseFloat(depthMatch[1] ?? depthMatch[2]);
+  }
+
+  // Weight: "2.5 kg", "5 lbs" (convert lbs → kg), "500g"
+  const kgMatch   = normalized.match(/(\d+(?:\.\d+)?)\s*(?:kg|kgs?|kilograms?)\b/i);
+  const lbsMatch  = normalized.match(/(\d+(?:\.\d+)?)\s*(?:lbs?|pounds?)\b/i);
+  const gMatch    = normalized.match(/(\d+(?:\.\d+)?)\s*(?:grams?|g)\b/i);
+  if (kgMatch)  attrs.weight = parseFloat(kgMatch[1]);
+  else if (lbsMatch) attrs.weight = parseFloat((parseFloat(lbsMatch[1]) * 0.453592).toFixed(2));
+  else if (gMatch)   attrs.weight = parseFloat((parseFloat(gMatch[1]) / 1000).toFixed(3));
 
   // Thickness: ".040", ".063"
   const thickMatch = normalized.match(/\.0\d{2,3}\b/);
@@ -291,9 +312,9 @@ export function parseOrder(normalized: string): ParseResult {
   const hasMatchableAttrs =
     attrs.color || attrs.material || attrs.finish || attrs.mountingType ||
     attrs.numberOfDoors || attrs.lockType || attrs.postalApproved !== undefined ||
-    attrs.category;
+    attrs.category || attrs.width || attrs.height || attrs.depth || attrs.weight;
 
-  if (!hasMatchableAttrs && !attrs.width && !attrs.height) {
+  if (!hasMatchableAttrs) {
     flags.push("Unable to extract any matchable attributes from this order");
   }
 
@@ -307,15 +328,16 @@ export function attrsToEntries(
 ): { key: string; label: string; value: string; isFlag: boolean }[] {
   const CATALOG_KEYS = new Set([
     "color", "material", "finish", "mountingType", "numberOfDoors",
-    "lockType", "postalApproved", "category", "width", "height",
+    "lockType", "postalApproved", "category", "width", "height", "depth", "weight",
   ]);
   const FLAG_KEYS = new Set(["rushDelivery", "reflectivity", "sides", "thickness", "quantity"]);
 
   const LABELS: Record<string, string> = {
     color: "Color", material: "Material", finish: "Finish",
-    mountingType: "Mount", numberOfDoors: "Doors", lockType: "Lock",
+    mountingType: "Mounting Type", numberOfDoors: "Doors", lockType: "Lock",
     postalApproved: "Postal Approved", category: "Category",
-    width: "Width (in)", height: "Height (in)", thickness: "Thickness (in)",
+    width: "Width (cm)", height: "Height (cm)", depth: "Depth (cm)", weight: "Weight (kg)",
+    thickness: "Thickness (in)",
     reflectivity: "Reflectivity", sides: "Sides", rushDelivery: "Rush Delivery",
     quantity: "Quantity",
   };
