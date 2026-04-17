@@ -13,8 +13,6 @@ import {
   ChevronRight,
   X,
   KeyRound,
-  ShoppingCart,
-  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -51,16 +49,6 @@ const navItems = [
     label: "API Keys",
     href: "/api-keys",
     icon: KeyRound,
-  },
-  {
-    label: "Place Order",
-    href: "/orders",
-    icon: ShoppingCart,
-  },
-  {
-    label: "Order Admin",
-    href: "/orders/admin",
-    icon: ClipboardList,
   },
 ];
 
