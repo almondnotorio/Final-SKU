@@ -30,9 +30,9 @@ export async function POST(request: Request) {
 
     // Fetch active SKUs for server-side matching
     const skusRaw = await prisma.sKU.findMany({
-      where: { status: { in: ["ACTIVE", "DISCONTINUED"] } },
+      where: { status: "ACTIVE" },
       select: {
-        id: true, sku: true, name: true, thumbnail: true, status: true,
+        id: true, sku: true, name: true, thumbnail: true,
         retailPrice: true, color: true, material: true, finish: true,
         mountingType: true, numberOfDoors: true, lockType: true,
         postalApproved: true, tags: true, features: true,
