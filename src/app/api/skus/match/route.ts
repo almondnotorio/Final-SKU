@@ -15,9 +15,9 @@ export async function GET(request: Request) {
     if (!q) return errorResponse("Query parameter 'q' is required", 400);
 
     const skus = await prisma.sKU.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: { in: ["ACTIVE", "DISCONTINUED"] } },
       select: {
-        id: true, sku: true, name: true, thumbnail: true,
+        id: true, sku: true, name: true, thumbnail: true, status: true,
         retailPrice: true, color: true, material: true, finish: true,
         mountingType: true, numberOfDoors: true, lockType: true,
         postalApproved: true, tags: true, features: true,

@@ -38,7 +38,11 @@ export async function GET(request: Request) {
           { tags: { has: search.toLowerCase() } },
         ],
       }),
-      ...(status && { status }),
+      ...(status && {
+        status: status.includes(",")
+          ? { in: status.split(",").map((s) => s.trim()) as never[] }
+          : status,
+      }),
       ...(categoryId && { categoryId }),
     };
 

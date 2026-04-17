@@ -268,7 +268,7 @@ function SKUMatchCard({ scored, rank }: { scored: ScoredSKU; rank: number }) {
   const Icon = cfg.Icon;
 
   return (
-    <div className="rounded-lg border bg-card p-3 space-y-2.5">
+    <div className={cn("rounded-lg border bg-card p-3 space-y-2.5", scored.sku.status === "DISCONTINUED" && "opacity-60")}>
       <div className="flex items-start gap-2.5">
         {/* Rank */}
         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
@@ -292,7 +292,14 @@ function SKUMatchCard({ scored, rank }: { scored: ScoredSKU; rank: number }) {
         {/* Name + SKU */}
         <div className="flex-1 min-w-0">
           <p className="text-xs text-muted-foreground truncate">{scored.sku.category.name}</p>
-          <p className="text-sm font-semibold leading-tight truncate">{scored.sku.name}</p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-sm font-semibold leading-tight truncate">{scored.sku.name}</p>
+            {scored.sku.status === "DISCONTINUED" && (
+              <span className="shrink-0 rounded-full bg-zinc-200 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-zinc-500">
+                Discontinued
+              </span>
+            )}
+          </div>
           <p className="text-xs font-mono text-muted-foreground">{scored.sku.sku}</p>
         </div>
 
@@ -340,7 +347,7 @@ export function OrderChat() {
   // Fetch SKUs once on mount
   useEffect(() => {
     setSkusLoading(true);
-    fetch("/api/skus?limit=100&status=ACTIVE")
+    fetch("/api/skus?limit=200&status=ACTIVE,DISCONTINUED")
       .then((r) => r.json())
       .then((d) => {
         const raw = (d.data ?? []) as Array<Record<string, unknown>>;
@@ -349,6 +356,7 @@ export function OrderChat() {
             id: s.id as string,
             sku: s.sku as string,
             name: s.name as string,
+            status: (s.status as string) ?? "ACTIVE",
             thumbnail: (s.thumbnail as string | null) ?? null,
             retailPrice: Number(s.retailPrice),
             category: s.category as { name: string },

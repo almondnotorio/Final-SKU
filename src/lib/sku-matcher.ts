@@ -6,6 +6,7 @@ export interface MatchableSKU {
   id: string;
   sku: string;
   name: string;
+  status: string;
   thumbnail: string | null;
   retailPrice: number;
   category: { name: string };
