@@ -82,17 +82,7 @@ Return a JSON object with this exact structure:
   "notes": "Detailed explanation of the match decision, what was found, what's missing or ambiguous"
 }`;
 
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    });
-
-    const responseText =
-      message.content[0].type === "text" ? message.content[0].text : "";
-
-    let aiResult: {
+    type AiResult = {
       parsedAttributes?: Record<string, unknown>;
       matchedSkuId?: string | null;
       matchedSkuCode?: string | null;
@@ -101,13 +91,32 @@ Return a JSON object with this exact structure:
       flags?: string[];
       notes?: string;
     };
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      aiResult = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
-    } catch {
-      console.error("[process] Failed to parse AI JSON:", responseText);
-      return errorResponse("AI returned an unparseable response", 500);
+
+    async function tryCallAI(): Promise<AiResult> {
+      try {
+        const message = await anthropic.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+        });
+        const responseText =
+          message.content[0].type === "text" ? message.content[0].text : "";
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        return JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+      } catch {
+        return {
+          parsedAttributes: {},
+          matchedSkuId: null,
+          confidence: 0,
+          status: "PENDING",
+          flags: ["AI processing unavailable — order saved for manual review"],
+          notes: "AI processing could not be completed. The order has been saved and requires manual review.",
+        };
+      }
     }
+
+    const aiResult = await tryCallAI();
 
     const validStatuses = ["PENDING", "MATCHED", "PARTIAL_MATCH", "NO_MATCH", "INVALID"];
     const status = validStatuses.includes(aiResult.status ?? "")
