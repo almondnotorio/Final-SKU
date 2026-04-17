@@ -17,7 +17,7 @@ export default function OrdersPage() {
           <div>
             <h1 className="text-lg font-semibold leading-tight">Order Processing</h1>
             <p className="text-xs text-muted-foreground">
-              Describe your order in natural language — AI will match it to a SKU
+              Describe your order — live parser extracts attributes and matches to a SKU
             </p>
           </div>
         </div>
