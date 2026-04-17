@@ -153,6 +153,33 @@ function AddChipForm({ onAdd }: { onAdd: (key: string, value: string) => void })
   );
 }
 
+const COLOR_SWATCHES: Record<string, string> = {
+  black:        "#1a1a1a",
+  white:        "#f5f5f5",
+  bronze:       "#cd7f32",
+  "dark bronze":"#6e3e1e",
+  silver:       "#c0c0c0",
+  sandstone:    "#d4b483",
+  tan:          "#d2b48c",
+  beige:        "#f5f0dc",
+  red:          "#dc2626",
+  blue:         "#2563eb",
+  green:        "#16a34a",
+  yellow:       "#eab308",
+  gray:         "#9ca3af",
+  grey:         "#9ca3af",
+  brown:        "#92400e",
+};
+
+function colorSwatch(colorName: string | null): string | null {
+  if (!colorName) return null;
+  const key = colorName.toLowerCase().trim();
+  if (COLOR_SWATCHES[key]) return COLOR_SWATCHES[key];
+  // try first word
+  const first = key.split(/[\s&,]/)[0];
+  return COLOR_SWATCHES[first] ?? null;
+}
+
 function AttributeCell({ attr }: { attr: AttributeMatchDetail }) {
   const bg =
     attr.matched === true  ? "bg-emerald-50" :
@@ -174,6 +201,12 @@ function AttributeCell({ attr }: { attr: AttributeMatchDetail }) {
       </span>
       <div className="flex items-center gap-1">
         {icon}
+        {attr.key === "color" && colorSwatch(attr.skuValue) && (
+          <span
+            className="h-2.5 w-2.5 rounded-full shrink-0 border border-black/10"
+            style={{ backgroundColor: colorSwatch(attr.skuValue)! }}
+          />
+        )}
         <span className="font-medium text-foreground truncate">
           {attr.skuValue ?? <span className="text-muted-foreground italic">—</span>}
         </span>
@@ -403,7 +436,7 @@ export function OrderChat() {
     ...flags,
     ...flagChips.map((c) => `${c.label}: ${c.value}`),
   ];
-  const topSKUs = scoredSKUs.slice(0, 6);
+  const topSKUs = scoredSKUs.filter((s) => s.score > 0).slice(0, 6);
   const hasInput = rawInput.trim().length > 0;
 
   return (
@@ -547,6 +580,14 @@ export function OrderChat() {
               <p className="text-sm text-muted-foreground">
                 Start typing then click Parse Order
               </p>
+            </div>
+          )}
+
+          {!skusLoading && normalizedStr && topSKUs.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <XCircle className="h-8 w-8 text-muted-foreground mb-2 opacity-40" />
+              <p className="text-sm text-muted-foreground">No matching SKUs found</p>
+              <p className="text-xs text-muted-foreground opacity-60 mt-1">Try adding attribute chips to refine your search</p>
             </div>
           )}
 
