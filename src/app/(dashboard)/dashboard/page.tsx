@@ -15,8 +15,8 @@ async function DashboardStats() {
   const [totalSKUs, activeSKUs, outOfStock, discontinued, totalCategories, recentSKUs] =
     await Promise.all([
       prisma.sKU.count(),
-      prisma.sKU.count({ where: { status: "ACTIVE" } }),
-      prisma.sKU.count({ where: { status: "OUT_OF_STOCK" } }),
+      prisma.sKU.count({ where: { status: "ACTIVE", stockQuantity: { gt: 0 } } }),
+      prisma.sKU.count({ where: { OR: [{ status: "OUT_OF_STOCK" }, { stockQuantity: 0 }] } }),
       prisma.sKU.count({ where: { status: "DISCONTINUED" } }),
       prisma.category.count(),
       prisma.sKU.findMany({
@@ -154,9 +154,9 @@ async function DashboardStats() {
                   <div className="flex shrink-0 items-center gap-2 md:gap-4">
                     <span className="hidden text-sm font-medium sm:inline">{formatCurrency(sku.retailPrice)}</span>
                     <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${getStatusColor(sku.status)}`}
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${getStatusColor(sku.stockQuantity === 0 ? "OUT_OF_STOCK" : sku.status)}`}
                     >
-                      {formatStatus(sku.status)}
+                      {formatStatus(sku.stockQuantity === 0 ? "OUT_OF_STOCK" : sku.status)}
                     </span>
                   </div>
                 </Link>
