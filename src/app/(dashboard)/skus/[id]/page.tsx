@@ -96,9 +96,9 @@ export default async function SKUDetailPage({ params }: Props) {
                     </div>
                   </div>
                   <span
-                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusColor(sku.status)}`}
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusColor(sku.stockQuantity === 0 ? "OUT_OF_STOCK" : sku.status)}`}
                   >
-                    {formatStatus(sku.status)}
+                    {formatStatus(sku.stockQuantity === 0 ? "OUT_OF_STOCK" : sku.status)}
                   </span>
                 </div>
 

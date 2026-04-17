@@ -31,11 +31,16 @@ export function SKUCard({ sku }: SKUCardProps) {
         )}
         {/* Status overlay */}
         <div className="absolute left-2 top-2">
-          <span
-            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${getStatusColor(sku.status)}`}
-          >
-            {formatStatus(sku.status)}
-          </span>
+          {(() => {
+            const displayStatus = sku.stockQuantity === 0 ? "OUT_OF_STOCK" : sku.status;
+            return (
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${getStatusColor(displayStatus)}`}
+              >
+                {formatStatus(displayStatus)}
+              </span>
+            );
+          })()}
         </div>
       </div>
 
