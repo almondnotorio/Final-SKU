@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
-  Plus,
   Tag,
   Signpost,
   ChevronLeft,
@@ -34,11 +33,6 @@ const navItems = [
     label: "All SKUs",
     href: "/skus",
     icon: Package,
-  },
-  {
-    label: "Add SKU",
-    href: "/skus/new",
-    icon: Plus,
   },
   {
     label: "Categories",
