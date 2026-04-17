@@ -50,7 +50,7 @@ const ABBREV_MAP: [RegExp, string][] = [
   [/\bamd\b/gi, "anodized"],
   [/\bpnt\b/gi, "powder coat"],
   [/\bpwd coat\b/gi, "powder coat"],
-  [/\bpc\b(?=\s|$)/gi, "powder coat"],
+  [/\bpc\b/gi, "powder coat"],
   [/\busps\b/gi, "postal approved"],
   [/\bp\/a\b/gi, "postal approved"],
   [/\bhip\b/gi, "hip reflectivity"],
@@ -68,6 +68,12 @@ const ABBREV_MAP: [RegExp, string][] = [
   [/\bblk\b/gi, "black"],
   [/\bwht\b/gi, "white"],
   [/\bhd\b/gi, "heavy duty"],
+  [/\bss\b/gi, "stainless steel"],
+  [/\bgalv\b/gi, "galvanized"],
+  [/\bcast alum\b/gi, "aluminum"],
+  [/\bdie cast\b/gi, "aluminum"],
+  [/\bwmt\b/gi, "wall mount"],
+  [/\bpmt\b/gi, "post mount"],
 ];
 
 // ─── normalizeInput ───────────────────────────────────────────────────────────
@@ -116,18 +122,18 @@ function matchDict<T extends string>(
 // ─── Keyword dictionaries ─────────────────────────────────────────────────────
 
 const COLOR_DICT: Record<string, string[]> = {
-  Black:     ["black", "blk", "matte black", "gloss black"],
-  Bronze:    ["bronze", "dark bronze", "oil rubbed bronze", "brz"],
-  Sandstone: ["sandstone", "sand stone", "sand", "tan", "beige"],
-  White:     ["white", "wht", "gloss white"],
-  Silver:    ["silver", "grey anodized", "gray anodized", "aluminum silver"],
+  Black:     ["black", "blk", "matte black", "gloss black", "charcoal", "dark gray", "dark grey"],
+  Bronze:    ["bronze", "dark bronze", "oil rubbed bronze", "brz", "antique bronze"],
+  Sandstone: ["sandstone", "sand stone", "sand", "tan", "beige", "clay", "desert"],
+  White:     ["white", "wht", "gloss white", "off white", "off-white"],
+  Silver:    ["silver", "grey anodized", "gray anodized", "aluminum silver", "gray", "grey", "light gray", "light grey"],
 };
 
 const MATERIAL_DICT: Record<string, string[]> = {
-  "Galvanized Steel": ["galvanized steel", "galv steel", "galvanized", "steel"],
-  "Aluminum":         ["aluminum", "aluminium", "alum"],
-  "Stainless Steel":  ["stainless steel", "stainless"],
-  "Plastic":          ["plastic", "poly", "hdpe"],
+  "Galvanized Steel": ["galvanized steel", "galv steel", "galvanized", "steel", "cold rolled steel", "mild steel", "carbon steel"],
+  "Aluminum":         ["aluminum", "aluminium", "alum", "cast aluminum", "die cast aluminum", "extruded aluminum"],
+  "Stainless Steel":  ["stainless steel", "stainless", "304 stainless", "316 stainless"],
+  "Plastic":          ["plastic", "poly", "hdpe", "abs", "polycarbonate", "pvc"],
 };
 
 const FINISH_DICT: Record<string, string[]> = {
@@ -138,12 +144,12 @@ const FINISH_DICT: Record<string, string[]> = {
 };
 
 const MOUNTING_DICT: Record<string, string[]> = {
-  POST:      ["post mount", "post mounted", "post-mount", "on post", "mounted on post"],
-  WALL:      ["wall mount", "wall mounted", "wall-mount", "wall hung", "surface wall"],
-  PEDESTAL:  ["pedestal mount", "pedestal mounted", "pedestal base", "pedestal", "freestanding"],
-  IN_GROUND: ["in ground", "in-ground", "ground mount", "ground mounted"],
-  SURFACE:   ["surface mount", "surface mounted", "surface-mount"],
-  RECESSED:  ["recessed", "flush mount", "flush-mount", "flush mounted"],
+  POST:      ["post mount", "post mounted", "post-mount", "on post", "mounted on post", "on a post", "post installation"],
+  WALL:      ["wall mount", "wall mounted", "wall-mount", "wall hung", "surface wall", "wall installation", "wall mailbox"],
+  PEDESTAL:  ["pedestal mount", "pedestal mounted", "pedestal base", "pedestal", "freestanding", "free standing", "standalone", "stand alone"],
+  IN_GROUND: ["in ground", "in-ground", "ground mount", "ground mounted", "underground", "in the ground"],
+  SURFACE:   ["surface mount", "surface mounted", "surface-mount", "surface installation"],
+  RECESSED:  ["recessed", "flush mount", "flush-mount", "flush mounted", "flush installation"],
 };
 
 const LOCK_DICT: Record<string, string[]> = {
@@ -205,10 +211,26 @@ export function parseOrder(normalized: string): ParseResult {
     if (sizeMatch[3]) attrs.depth = parseFloat(sizeMatch[3]);
   }
 
+  // Standalone width: "width 30", "width: 30", "30cm wide", "30 wide"
+  if (!attrs.width) {
+    const wMatch = normalized.match(
+      /(?:\bwidth[:\s=]+(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:cm\s+)?wide?\b)/i
+    );
+    if (wMatch) attrs.width = parseFloat(wMatch[1] ?? wMatch[2]);
+  }
+
+  // Standalone height: "height 40", "height: 40", "40cm tall", "40 tall"
+  if (!attrs.height) {
+    const hMatch = normalized.match(
+      /(?:\bheight[:\s=]+(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:cm\s+)?tall?\b)/i
+    );
+    if (hMatch) attrs.height = parseFloat(hMatch[1] ?? hMatch[2]);
+  }
+
   // Depth standalone: "depth 5", "5cm depth", "5 cm deep", "depth: 5"
   if (!attrs.depth) {
     const depthMatch = normalized.match(
-      /(?:depth[:\s]+(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*cm\s+deep(?:th)?)/i
+      /(?:depth[:\s=]+(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:cm\s+)?deep(?:th)?)/i
     );
     if (depthMatch) attrs.depth = parseFloat(depthMatch[1] ?? depthMatch[2]);
   }

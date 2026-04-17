@@ -34,7 +34,7 @@ function chipsToAttrs(chips: AttributeChip[]): ParsedOrderAttributes {
     const v = chip.value;
     if (chip.key === "numberOfDoors" || chip.key === "quantity" || chip.key === "sides") {
       attrs[chip.key] = parseInt(v);
-    } else if (chip.key === "width" || chip.key === "height" || chip.key === "thickness") {
+    } else if (chip.key === "width" || chip.key === "height" || chip.key === "depth" || chip.key === "weight" || chip.key === "thickness") {
       attrs[chip.key] = parseFloat(v);
     } else if (chip.key === "postalApproved" || chip.key === "rushDelivery") {
       attrs[chip.key] = v === "true" || v === "yes" || v === "1";
