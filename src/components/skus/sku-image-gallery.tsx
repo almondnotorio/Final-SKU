@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,64 +16,33 @@ interface SKUImageGalleryProps {
   skuName: string;
 }
 
-const ZOOM = 2.5;
-const LENS_SIZE = 140;
-
-interface LensPos {
-  x: number;
-  y: number;
-  bgX: number;
-  bgY: number;
-}
-
 function MagnifiableImage({ src, alt }: { src: string; alt: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [lens, setLens] = useState<LensPos | null>(null);
+  const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // Clamp lens center so it never exceeds container bounds
-    const lensHalf = LENS_SIZE / 2;
-    const clampedX = Math.max(lensHalf, Math.min(x, rect.width - lensHalf));
-    const clampedY = Math.max(lensHalf, Math.min(y, rect.height - lensHalf));
-
-    // Background position: shift the zoomed image so the hovered point stays centered
-    const bgX = -(clampedX * ZOOM - lensHalf);
-    const bgY = -(clampedY * ZOOM - lensHalf);
-
-    setLens({ x: clampedX, y: clampedY, bgX, bgY });
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setOrigin({ x, y });
   };
 
   return (
     <div
-      ref={containerRef}
-      className="relative w-full h-full cursor-crosshair"
+      className="relative w-full h-full overflow-hidden cursor-zoom-in"
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => setLens(null)}
+      onMouseLeave={() => setOrigin(null)}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} className="w-full h-full object-contain" />
-
-      {lens && (
-        <div
-          className="absolute rounded-full border-2 border-primary shadow-xl pointer-events-none z-10 overflow-hidden"
-          style={{
-            width: LENS_SIZE,
-            height: LENS_SIZE,
-            left: lens.x - LENS_SIZE / 2,
-            top: lens.y - LENS_SIZE / 2,
-            backgroundImage: `url(${src})`,
-            backgroundSize: `${100 * ZOOM}%`,
-            backgroundPosition: `${lens.bgX}px ${lens.bgY}px`,
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-      )}
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full object-contain transition-transform duration-100 ease-out will-change-transform"
+        style={{
+          transform: origin ? "scale(2.5)" : "scale(1)",
+          transformOrigin: origin ? `${origin.x}% ${origin.y}%` : "center",
+        }}
+        draggable={false}
+      />
     </div>
   );
 }
