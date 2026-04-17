@@ -328,9 +328,10 @@ export function OrderChat() {
   }
 
   // Live SKU scoring (synchronous, via useMemo)
+  // Always show all SKUs after a parse — score 0 when no chips, scored when chips exist.
   const scoredSKUs = useMemo<ScoredSKU[]>(() => {
-    if (skus.length === 0 || chips.length === 0) return [];
-    const attrs = chipsToAttrs(chips);
+    if (skus.length === 0) return [];
+    const attrs = chipsToAttrs(chips.filter((c) => !c.isFlag));
     return matchSKUs(attrs, skus, normalizedStr);
   }, [chips, skus, normalizedStr]);
 
@@ -537,22 +538,17 @@ export function OrderChat() {
             </div>
           )}
 
-          {!skusLoading && !hasInput && (
+
+          {!skusLoading && !normalizedStr && !hasInput && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Package className="h-8 w-8 text-muted-foreground mb-2 opacity-40" />
               <p className="text-sm text-muted-foreground">
-                Start typing to see matching SKUs
+                Start typing then click Parse Order
               </p>
             </div>
           )}
 
-          {!skusLoading && hasInput && topSKUs.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-12">
-              No SKUs available
-            </p>
-          )}
-
-          {!skusLoading && topSKUs.map((s, i) => (
+          {!skusLoading && normalizedStr && topSKUs.map((s, i) => (
             <SKUMatchCard key={s.sku.id} scored={s} rank={i + 1} />
           ))}
         </div>
