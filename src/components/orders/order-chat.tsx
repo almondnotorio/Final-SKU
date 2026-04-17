@@ -178,7 +178,7 @@ function AttributeCell({ attr }: { attr: AttributeMatchDetail }) {
           {attr.skuValue ?? <span className="text-muted-foreground italic">—</span>}
         </span>
       </div>
-      {attr.matched === false && attr.orderedValue && (
+      {attr.matched === false && attr.orderedValue && attr.key !== "name" && (
         <span className="text-[9px] text-red-400 truncate">
           ordered: {attr.orderedValue}
         </span>
@@ -246,10 +246,12 @@ function SKUMatchCard({ scored, rank }: { scored: ScoredSKU; rank: number }) {
         />
       </div>
 
-      {/* Attribute grid — 8 fields */}
+      {/* Attribute grid — name + 8 fields */}
       <div className="grid grid-cols-4 gap-px rounded-md overflow-hidden border bg-border text-[11px]">
         {scored.attributeGrid.map((attr) => (
-          <AttributeCell key={attr.key} attr={attr} />
+          <div key={attr.key} className={attr.key === "name" ? "col-span-4" : ""}>
+            <AttributeCell attr={attr} />
+          </div>
         ))}
       </div>
     </div>
