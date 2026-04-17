@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   CheckCircle2,
   HelpCircle,
@@ -227,9 +227,8 @@ export function OrdersTable() {
                 </tr>
               ) : (
                 orders.map((order) => (
-                  <>
+                  <React.Fragment key={order.id}>
                     <tr
-                      key={order.id}
                       className={cn(
                         "border-b cursor-pointer hover:bg-muted/30 transition-colors",
                         expandedId === order.id && "bg-muted/20"
@@ -322,8 +321,8 @@ export function OrdersTable() {
                       </td>
                     </tr>
 
-                    {expandedId === order.id && <ExpandedRow key={`${order.id}-exp`} order={order} />}
-                  </>
+                    {expandedId === order.id && <ExpandedRow order={order} />}
+                  </React.Fragment>
                 ))
               )}
             </tbody>
