@@ -283,26 +283,22 @@ export function OrderChat() {
       .finally(() => setSkusLoading(false));
   }, []);
 
-  // Debounced live parse (300ms)
-  useEffect(() => {
+  function handleParse() {
     if (!rawInput.trim()) {
       setChips([]);
       setFlags([]);
       setNormalizedStr("");
       return;
     }
-    const timer = setTimeout(() => {
-      const norm = normalizeInput(rawInput);
-      const { attributes, flags: newFlags } = parseOrder(norm);
-      setNormalizedStr(norm);
-      setFlags(newFlags);
-      setChips((prev) => {
-        const manualChips = prev.filter((c) => c.isManual);
-        return [...attrsToChips(attributes, manualChips), ...manualChips];
-      });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [rawInput]);
+    const norm = normalizeInput(rawInput);
+    const { attributes, flags: newFlags } = parseOrder(norm);
+    setNormalizedStr(norm);
+    setFlags(newFlags);
+    setChips((prev) => {
+      const manualChips = prev.filter((c) => c.isManual);
+      return [...attrsToChips(attributes, manualChips), ...manualChips];
+    });
+  }
 
   // Live SKU scoring (synchronous, via useMemo)
   const scoredSKUs = useMemo<ScoredSKU[]>(() => {
@@ -390,10 +386,21 @@ export function OrderChat() {
           <textarea
             value={rawInput}
             onChange={(e) => { setRawInput(e.target.value); setSubmitted(false); }}
-            placeholder="Describe your order in plain language…"
+            onKeyDown={(e) => { if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); handleParse(); } }}
+            placeholder="Describe your order in plain language… (Shift+Enter to parse)"
             rows={5}
             className="w-full resize-none rounded-xl border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleParse}
+            disabled={!rawInput.trim()}
+            className="mt-2 w-full"
+          >
+            Parse Order
+          </Button>
 
           {/* Example prompts */}
           {!hasInput && (
@@ -401,7 +408,7 @@ export function OrderChat() {
               {EXAMPLES.map((ex) => (
                 <button
                   key={ex}
-                  onClick={() => setRawInput(ex)}
+                  onClick={() => { setRawInput(ex); }}
                   className="text-xs rounded-full border border-dashed px-2.5 py-0.5 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
                 >
                   {ex.length > 52 ? ex.slice(0, 52) + "…" : ex}
