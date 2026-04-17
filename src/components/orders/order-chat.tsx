@@ -204,7 +204,7 @@ export function OrderChat() {
 
   async function handleSubmit() {
     const catalogChips = chips.filter((c) => !c.isFlag);
-    if (catalogChips.length === 0) return;
+    if (!rawInput.trim()) return;
 
     setSubmitting(true);
     setSubmitError(null);
@@ -238,7 +238,6 @@ export function OrderChat() {
     }
   }
 
-  const catalogChips = chips.filter((c) => !c.isFlag);
   const topSKUs = scoredSKUs.filter((s) => s.score > 0).slice(0, 6);
   const hasInput = rawInput.trim().length > 0;
 
@@ -290,7 +289,7 @@ export function OrderChat() {
           )}
           <Button
             onClick={handleSubmit}
-            disabled={submitting || catalogChips.length === 0}
+            disabled={submitting || !rawInput.trim()}
             className="w-full"
           >
             {submitting ? (
