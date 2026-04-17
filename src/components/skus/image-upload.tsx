@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import Image from "next/image";
 import { Upload, X, Star, Loader2, ImageIcon, AlertCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -30,6 +29,28 @@ interface UploadError {
   title: string;
   message: string;
   hint: string;
+}
+
+function GridImage({ src, alt }: { src: string; alt: string }) {
+  const [isWide, setIsWide] = useState(false);
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={(e) => {
+          const img = e.currentTarget;
+          if (img.naturalWidth > img.naturalHeight) setIsWide(true);
+        }}
+        className={cn(
+          "object-contain transition-transform group-hover:scale-105",
+          isWide ? "w-1/2 h-auto" : "w-full h-full"
+        )}
+      />
+    </div>
+  );
 }
 
 export function ImageUpload({
@@ -288,13 +309,7 @@ export function ImageUpload({
               key={image.url + index}
               className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
             >
-              <Image
-                src={image.url}
-                alt={image.alt || `Image ${index + 1}`}
-                fill
-                className="object-contain transition-transform group-hover:scale-105"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              />
+              <GridImage src={image.url} alt={image.alt || `Image ${index + 1}`} />
               {/* Overlay */}
               <div className="absolute inset-0 flex flex-col items-end justify-between bg-black/0 p-1.5 transition-colors group-hover:bg-black/30">
                 {/* Primary badge */}
@@ -356,12 +371,7 @@ export function ImageUpload({
               key={previewUrl}
               className="relative aspect-square overflow-hidden rounded-lg border bg-muted"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={previewUrl}
-                alt={file.name}
-                className="h-full w-full object-contain"
-              />
+              <GridImage src={previewUrl} alt={file.name} />
               <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                 <Loader2 className="h-6 w-6 animate-spin text-white" />
               </div>
