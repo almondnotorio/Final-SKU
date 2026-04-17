@@ -314,14 +314,6 @@ function SKUMatchCard({ scored, rank }: { scored: ScoredSKU; rank: number }) {
         />
       </div>
 
-      {/* Attribute grid — name + 8 fields */}
-      <div className="grid grid-cols-4 gap-px rounded-md overflow-hidden border bg-border text-[11px]">
-        {scored.attributeGrid.map((attr) => (
-          <div key={attr.key} className={attr.key === "name" ? "col-span-4" : ""}>
-            <AttributeCell attr={attr} />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
