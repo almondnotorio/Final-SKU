@@ -172,12 +172,12 @@ export default async function SKUDetailPage({ params }: Props) {
                     label: "Dimensions (W×H×D)",
                     value:
                       sku.width || sku.height || sku.depth
-                        ? `${sku.width ?? "?"}" × ${sku.height ?? "?"}" × ${sku.depth ?? "?"}"`
+                        ? `${sku.width ?? "?"}cm × ${sku.height ?? "?"}cm × ${sku.depth ?? "?"}cm`
                         : null,
                   },
                   {
                     label: "Weight",
-                    value: sku.weight ? `${sku.weight} lbs` : null,
+                    value: sku.weight ? `${sku.weight} kg` : null,
                   },
                 ].map(({ label, value }) => (
                   <div key={label}>

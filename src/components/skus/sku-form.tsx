@@ -409,7 +409,7 @@ export function SKUForm({ categories, initialData, mode }: SKUFormProps) {
             {(["width", "height", "depth"] as const).map((dim) => (
               <FormField
                 key={dim}
-                label={`${dim.charAt(0).toUpperCase() + dim.slice(1)} (in)`}
+                label={`${dim.charAt(0).toUpperCase() + dim.slice(1)} (cm)`}
                 htmlFor={dim}
                 error={errors[dim]?.message}
               >
@@ -425,7 +425,7 @@ export function SKUForm({ categories, initialData, mode }: SKUFormProps) {
               </FormField>
             ))}
             <FormField
-              label="Weight (lbs)"
+              label="Weight (kg)"
               htmlFor="weight"
               error={errors.weight?.message}
             >
