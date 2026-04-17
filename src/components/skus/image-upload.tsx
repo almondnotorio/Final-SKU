@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Upload, X, Star, Loader2, ImageIcon, AlertCircle, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -13,6 +12,11 @@ interface UploadedImage {
   alt?: string;
   isPrimary?: boolean;
   order?: number;
+}
+
+interface PendingPreview {
+  previewUrl: string;
+  file: File;
 }
 
 interface ImageUploadProps {
@@ -37,6 +41,14 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [uploadError, setUploadError] = useState<UploadError | null>(null);
+  const [pendingPreviews, setPendingPreviews] = useState<PendingPreview[]>([]);
+  const objectUrlsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    return () => {
+      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   const clearError = () => setUploadError(null);
 
@@ -83,10 +95,18 @@ export function ImageUpload({
 
       if (validFiles.length === 0) return;
 
+      // Create local previews immediately
+      const previews: PendingPreview[] = validFiles.map((file) => {
+        const previewUrl = URL.createObjectURL(file);
+        objectUrlsRef.current.push(previewUrl);
+        return { previewUrl, file };
+      });
+      setPendingPreviews(previews);
       setUploading(true);
+
       try {
         const uploaded: UploadedImage[] = [];
-        for (const file of validFiles) {
+        for (const { file, previewUrl } of previews) {
           const formData = new FormData();
           formData.append("file", file);
           const res = await fetch("/api/upload", {
@@ -122,8 +142,10 @@ export function ImageUpload({
                 hint: "Try again. If the problem continues, check your internet connection or contact support.",
               };
             }
+            URL.revokeObjectURL(previewUrl);
             setUploadError(err);
             toast.error(err.title, { description: err.hint });
+            setPendingPreviews([]);
             return;
           }
           const data = await res.json();
@@ -132,6 +154,7 @@ export function ImageUpload({
             alt: file.name.replace(/\.[^.]+$/, ""),
             isPrimary: false,
           });
+          URL.revokeObjectURL(previewUrl);
         }
         const newImages = [...value, ...uploaded];
         if (!newImages.some((img) => img.isPrimary) && newImages.length > 0) {
@@ -149,6 +172,7 @@ export function ImageUpload({
         toast.error(err.title, { description: err.hint });
       } finally {
         setUploading(false);
+        setPendingPreviews([]);
       }
     },
     [value, onChange, maxImages]
@@ -257,7 +281,7 @@ export function ImageUpload({
       )}
 
       {/* Image grid */}
-      {value.length > 0 && (
+      {(value.length > 0 || pendingPreviews.length > 0) && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {value.map((image, index) => (
             <div
@@ -268,7 +292,7 @@ export function ImageUpload({
                 src={image.url}
                 alt={image.alt || `Image ${index + 1}`}
                 fill
-                className="object-cover transition-transform group-hover:scale-105"
+                className="object-contain transition-transform group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
               {/* Overlay */}
@@ -323,6 +347,23 @@ export function ImageUpload({
                     <X className="h-3 w-3" />
                   </button>
                 </div>
+              </div>
+            </div>
+          ))}
+          {/* Pending upload previews */}
+          {pendingPreviews.map(({ previewUrl, file }) => (
+            <div
+              key={previewUrl}
+              className="relative aspect-square overflow-hidden rounded-lg border bg-muted"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt={file.name}
+                className="h-full w-full object-contain"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
               </div>
             </div>
           ))}
