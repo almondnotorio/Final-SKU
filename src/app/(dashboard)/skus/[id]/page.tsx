@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/layout/header";
@@ -9,13 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { DeleteSKUButton } from "@/components/skus/delete-sku-button";
+import { SKUImageGallery } from "@/components/skus/sku-image-gallery";
 import {
   formatCurrency,
   formatStatus,
   getStatusColor,
   formatMountingType,
 } from "@/lib/utils";
-import { Pencil, Package, CheckCircle2, Tag } from "lucide-react";
+import { Pencil, CheckCircle2, Tag } from "lucide-react";
 import type { Metadata } from "next";
 
 interface Props {
@@ -44,7 +44,6 @@ export default async function SKUDetailPage({ params }: Props) {
 
   if (!sku) notFound();
 
-  const primaryImage = sku.images.find((i) => i.isPrimary) ?? sku.images[0];
 
   return (
     <>
@@ -69,43 +68,16 @@ export default async function SKUDetailPage({ params }: Props) {
       <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6 animate-fade-in">
         <div className="grid gap-6 lg:grid-cols-5">
           {/* Images */}
-          <div className="lg:col-span-2 space-y-3">
-            <Card className="overflow-hidden">
-              <div className="relative aspect-square bg-muted">
-                {primaryImage ? (
-                  <Image
-                    src={primaryImage.url}
-                    alt={primaryImage.alt ?? sku.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 40vw"
-                    priority
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <Package className="h-16 w-16 text-muted-foreground/30" />
-                  </div>
-                )}
-              </div>
-            </Card>
-            {sku.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {sku.images.map((img, i) => (
-                  <div
-                    key={img.id}
-                    className="relative aspect-square overflow-hidden rounded-lg border bg-muted"
-                  >
-                    <Image
-                      src={img.url}
-                      alt={img.alt ?? `Image ${i + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="lg:col-span-2">
+            <SKUImageGallery
+              images={sku.images.map((img) => ({
+                id: img.id,
+                url: img.url,
+                alt: img.alt,
+                isPrimary: img.isPrimary,
+              }))}
+              skuName={sku.name}
+            />
           </div>
 
           {/* Details */}
