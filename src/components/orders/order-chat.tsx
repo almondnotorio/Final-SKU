@@ -153,6 +153,25 @@ function AddChipForm({ onAdd }: { onAdd: (key: string, value: string) => void })
   );
 }
 
+const MATERIAL_SWATCHES: Record<string, string> = {
+  "galvanized steel": "#8a9ba8",
+  "galvanized":       "#8a9ba8",
+  "aluminum":         "#bfc9d1",
+  "aluminium":        "#bfc9d1",
+  "stainless steel":  "#d6d6d6",
+  "stainless":        "#d6d6d6",
+  "steel":            "#9eaab3",
+  "plastic":          "#e2c87a",
+  "hdpe":             "#e2c87a",
+  "poly":             "#e2c87a",
+};
+
+function materialSwatch(materialName: string | null): string | null {
+  if (!materialName) return null;
+  const key = materialName.toLowerCase().trim();
+  return MATERIAL_SWATCHES[key] ?? MATERIAL_SWATCHES[key.split(/[\s&,]/)[0]] ?? null;
+}
+
 const COLOR_SWATCHES: Record<string, string> = {
   black:        "#1a1a1a",
   white:        "#f5f5f5",
@@ -205,6 +224,12 @@ function AttributeCell({ attr }: { attr: AttributeMatchDetail }) {
           <span
             className="h-2.5 w-2.5 rounded-full shrink-0 border border-black/10"
             style={{ backgroundColor: colorSwatch(attr.skuValue)! }}
+          />
+        )}
+        {attr.key === "material" && materialSwatch(attr.skuValue) && (
+          <span
+            className="h-2.5 w-2.5 rounded shrink-0 border border-black/10"
+            style={{ backgroundColor: materialSwatch(attr.skuValue)! }}
           />
         )}
         <span className="font-medium text-foreground truncate">
