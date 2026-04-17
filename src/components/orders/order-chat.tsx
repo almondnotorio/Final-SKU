@@ -412,7 +412,16 @@ export function OrderChat() {
         <div className="p-4 shrink-0">
           <textarea
             value={rawInput}
-            onChange={(e) => { setRawInput(e.target.value); setSubmitted(false); }}
+            onChange={(e) => {
+              const val = e.target.value;
+              setRawInput(val);
+              setSubmitted(false);
+              if (!val.trim()) {
+                setChips([]);
+                setFlags([]);
+                setNormalizedStr("");
+              }
+            }}
             onKeyDown={(e) => { if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); handleParse(); } }}
             placeholder="Describe your order in plain language… (Shift+Enter to parse)"
             rows={5}
