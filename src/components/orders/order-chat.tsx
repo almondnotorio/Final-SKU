@@ -200,18 +200,27 @@ function colorSwatch(colorName: string | null): string | null {
 }
 
 function AttributeCell({ attr }: { attr: AttributeMatchDetail }) {
+  // Red only when SKU has a real value that doesn't match; gray when SKU simply has no data
+  const hasSkuData = attr.skuValue !== null;
+  const isMatch    = attr.matched === true;
+  const isMismatch = attr.matched === false && hasSkuData;
+  const isMissing  = attr.matched === false && !hasSkuData;
+
   const bg =
-    attr.matched === true  ? "bg-emerald-50" :
-    attr.matched === false ? "bg-red-50"     :
-                             "bg-card";
+    isMatch    ? "bg-emerald-50" :
+    isMismatch ? "bg-red-50"     :
+    isMissing  ? "bg-muted/60"   :
+                 "bg-card";
   const labelCls =
-    attr.matched === true  ? "text-emerald-600" :
-    attr.matched === false ? "text-red-500"     :
-                             "text-muted-foreground";
+    isMatch    ? "text-emerald-600" :
+    isMismatch ? "text-red-500"     :
+    isMissing  ? "text-muted-foreground" :
+                 "text-muted-foreground";
   const icon =
-    attr.matched === true  ? <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" /> :
-    attr.matched === false ? <XCircle      className="h-2.5 w-2.5 text-red-400    shrink-0" /> :
-                             null;
+    isMatch    ? <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" /> :
+    isMismatch ? <XCircle      className="h-2.5 w-2.5 text-red-400    shrink-0" /> :
+    isMissing  ? <XCircle      className="h-2.5 w-2.5 text-muted-foreground/50 shrink-0" /> :
+                 null;
 
   return (
     <div className={cn("flex flex-col gap-0.5 px-2 py-1.5", bg)}>
@@ -232,12 +241,13 @@ function AttributeCell({ attr }: { attr: AttributeMatchDetail }) {
             style={{ backgroundColor: materialSwatch(attr.skuValue)! }}
           />
         )}
-        <span className="font-medium text-foreground truncate">
-          {attr.skuValue ?? <span className="text-muted-foreground italic">—</span>}
+        <span className={cn("font-medium truncate", hasSkuData ? "text-foreground" : "text-muted-foreground italic")}>
+          {attr.skuValue ?? "—"}
         </span>
       </div>
-      {attr.matched === false && attr.orderedValue && attr.key !== "name" && (
-        <span className="text-[9px] text-red-400 truncate">
+      {/* Show ordered vs SKU comparison on mismatch; show ordered hint on missing */}
+      {attr.matched !== null && attr.orderedValue && attr.key !== "name" && (
+        <span className={cn("text-[9px] truncate", isMatch ? "text-emerald-500" : "text-red-400")}>
           ordered: {attr.orderedValue}
         </span>
       )}
