@@ -32,22 +32,13 @@ interface UploadError {
 }
 
 function GridImage({ src, alt }: { src: string; alt: string }) {
-  const [isWide, setIsWide] = useState(false);
-
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
-        onLoad={(e) => {
-          const img = e.currentTarget;
-          if (img.naturalWidth > img.naturalHeight) setIsWide(true);
-        }}
-        className={cn(
-          "object-contain transition-transform group-hover:scale-105",
-          isWide ? "w-1/2 h-auto" : "w-full h-full"
-        )}
+        className="w-full h-full object-contain transition-transform group-hover:scale-105"
       />
     </div>
   );
