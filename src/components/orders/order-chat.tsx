@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  X, Plus, Send, Loader2, Package, AlertTriangle,
+  Send, Loader2, Package,
   CheckCircle2, HelpCircle, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { normalizeInput, parseOrder, attrsToEntries, type ParsedOrderAttributes } from "@/lib/order-parser";
-import { matchSKUs, type MatchableSKU, type ScoredSKU, type AttributeMatchDetail } from "@/lib/sku-matcher";
+import { matchSKUs, type MatchableSKU, type ScoredSKU } from "@/lib/sku-matcher";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,202 +58,6 @@ function attrsToChips(attrs: ParsedOrderAttributes, manualChips: AttributeChip[]
   }));
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function ChipItem({
-  chip,
-  onRemove,
-}: {
-  chip: AttributeChip;
-  onRemove: (id: string) => void;
-}) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium",
-        chip.isFlag
-          ? "border-amber-200 bg-amber-50 text-amber-700"
-          : chip.isManual
-          ? "border-blue-200 bg-blue-50 text-blue-700"
-          : "border-secondary bg-secondary text-secondary-foreground"
-      )}
-    >
-      <span className="opacity-60 capitalize">{chip.label}:</span>
-      <span>{chip.value}</span>
-      <button
-        onClick={() => onRemove(chip.id)}
-        className="ml-0.5 rounded-full hover:opacity-70 transition-opacity"
-        aria-label={`Remove ${chip.label}`}
-      >
-        <X className="h-2.5 w-2.5" />
-      </button>
-    </span>
-  );
-}
-
-function AddChipForm({ onAdd }: { onAdd: (key: string, value: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [key, setKey] = useState("");
-  const [value, setValue] = useState("");
-  const keyRef = useRef<HTMLInputElement>(null);
-
-  function handleAdd() {
-    const k = key.trim();
-    const v = value.trim();
-    if (!k || !v) return;
-    onAdd(k, v);
-    setKey("");
-    setValue("");
-    setOpen(false);
-  }
-
-  useEffect(() => {
-    if (open) keyRef.current?.focus();
-  }, [open]);
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-0.5 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-      >
-        <Plus className="h-3 w-3" /> Add
-      </button>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border bg-background px-2 py-0.5">
-      <input
-        ref={keyRef}
-        value={key}
-        onChange={(e) => setKey(e.target.value)}
-        placeholder="key"
-        className="w-16 text-xs outline-none bg-transparent"
-        onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-      />
-      <span className="text-muted-foreground text-xs">:</span>
-      <input
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="value"
-        className="w-20 text-xs outline-none bg-transparent"
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleAdd();
-          if (e.key === "Escape") setOpen(false);
-        }}
-      />
-      <button onClick={handleAdd} className="text-primary hover:opacity-70">
-        <Plus className="h-3 w-3" />
-      </button>
-      <button onClick={() => setOpen(false)} className="text-muted-foreground hover:opacity-70">
-        <X className="h-3 w-3" />
-      </button>
-    </span>
-  );
-}
-
-const MATERIAL_SWATCHES: Record<string, string> = {
-  "galvanized steel": "#8a9ba8",
-  "galvanized":       "#8a9ba8",
-  "aluminum":         "#bfc9d1",
-  "aluminium":        "#bfc9d1",
-  "stainless steel":  "#d6d6d6",
-  "stainless":        "#d6d6d6",
-  "steel":            "#9eaab3",
-  "plastic":          "#e2c87a",
-  "hdpe":             "#e2c87a",
-  "poly":             "#e2c87a",
-};
-
-function materialSwatch(materialName: string | null): string | null {
-  if (!materialName) return null;
-  const key = materialName.toLowerCase().trim();
-  return MATERIAL_SWATCHES[key] ?? MATERIAL_SWATCHES[key.split(/[\s&,]/)[0]] ?? null;
-}
-
-const COLOR_SWATCHES: Record<string, string> = {
-  black:        "#1a1a1a",
-  white:        "#f5f5f5",
-  bronze:       "#cd7f32",
-  "dark bronze":"#6e3e1e",
-  silver:       "#c0c0c0",
-  sandstone:    "#d4b483",
-  tan:          "#d2b48c",
-  beige:        "#f5f0dc",
-  red:          "#dc2626",
-  blue:         "#2563eb",
-  green:        "#16a34a",
-  yellow:       "#eab308",
-  gray:         "#9ca3af",
-  grey:         "#9ca3af",
-  brown:        "#92400e",
-};
-
-function colorSwatch(colorName: string | null): string | null {
-  if (!colorName) return null;
-  const key = colorName.toLowerCase().trim();
-  if (COLOR_SWATCHES[key]) return COLOR_SWATCHES[key];
-  // try first word
-  const first = key.split(/[\s&,]/)[0];
-  return COLOR_SWATCHES[first] ?? null;
-}
-
-function AttributeCell({ attr }: { attr: AttributeMatchDetail }) {
-  // Red only when SKU has a real value that doesn't match; gray when SKU simply has no data
-  const hasSkuData = attr.skuValue !== null;
-  const isMatch    = attr.matched === true;
-  const isMismatch = attr.matched === false && hasSkuData;
-  const isMissing  = attr.matched === false && !hasSkuData;
-
-  const bg =
-    isMatch    ? "bg-emerald-50" :
-    isMismatch ? "bg-red-50"     :
-    isMissing  ? "bg-muted/60"   :
-                 "bg-card";
-  const labelCls =
-    isMatch    ? "text-emerald-600" :
-    isMismatch ? "text-red-500"     :
-    isMissing  ? "text-muted-foreground" :
-                 "text-muted-foreground";
-  const icon =
-    isMatch    ? <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" /> :
-    isMismatch ? <XCircle      className="h-2.5 w-2.5 text-red-400    shrink-0" /> :
-    isMissing  ? <XCircle      className="h-2.5 w-2.5 text-muted-foreground/50 shrink-0" /> :
-                 null;
-
-  return (
-    <div className={cn("flex flex-col gap-0.5 px-2 py-1.5", bg)}>
-      <span className={cn("font-semibold uppercase tracking-wide text-[9px]", labelCls)}>
-        {attr.label}
-      </span>
-      <div className="flex items-center gap-1">
-        {icon}
-        {attr.key === "color" && colorSwatch(attr.skuValue) && (
-          <span
-            className="h-2.5 w-2.5 rounded-full shrink-0 border border-black/10"
-            style={{ backgroundColor: colorSwatch(attr.skuValue)! }}
-          />
-        )}
-        {attr.key === "material" && materialSwatch(attr.skuValue) && (
-          <span
-            className="h-2.5 w-2.5 rounded shrink-0 border border-black/10"
-            style={{ backgroundColor: materialSwatch(attr.skuValue)! }}
-          />
-        )}
-        <span className={cn("font-medium truncate", hasSkuData ? "text-foreground" : "text-muted-foreground italic")}>
-          {attr.skuValue ?? "—"}
-        </span>
-      </div>
-      {/* Show ordered vs SKU comparison on mismatch; show ordered hint on missing */}
-      {attr.matched !== null && attr.orderedValue && attr.key !== "name" && (
-        <span className={cn("text-[9px] truncate", isMatch ? "text-emerald-500" : "text-red-400")}>
-          ordered: {attr.orderedValue}
-        </span>
-      )}
-    </div>
-  );
-}
 
 const SCORE_CONFIG = {
   high:   { className: "bg-emerald-500", label: "MATCHED",       Icon: CheckCircle2, textCls: "text-emerald-700" },
@@ -329,7 +133,6 @@ const EXAMPLES = [
 export function OrderChat() {
   const [rawInput, setRawInput] = useState("");
   const [chips, setChips] = useState<AttributeChip[]>([]);
-  const [flags, setFlags] = useState<string[]>([]);
   const [normalizedStr, setNormalizedStr] = useState("");
   const [skus, setSkus] = useState<MatchableSKU[]>([]);
   const [skusLoading, setSkusLoading] = useState(true);
@@ -372,22 +175,24 @@ export function OrderChat() {
       .finally(() => setSkusLoading(false));
   }, []);
 
-  function handleParse() {
+  // Auto-parse with 300ms debounce
+  useEffect(() => {
     if (!rawInput.trim()) {
       setChips([]);
-      setFlags([]);
       setNormalizedStr("");
       return;
     }
-    const norm = normalizeInput(rawInput);
-    const { attributes, flags: newFlags } = parseOrder(norm);
-    setNormalizedStr(norm);
-    setFlags(newFlags);
-    setChips((prev) => {
-      const manualChips = prev.filter((c) => c.isManual);
-      return [...attrsToChips(attributes, manualChips), ...manualChips];
-    });
-  }
+    const timer = setTimeout(() => {
+      const norm = normalizeInput(rawInput);
+      const { attributes } = parseOrder(norm);
+      setNormalizedStr(norm);
+      setChips((prev) => {
+        const manualChips = prev.filter((c) => c.isManual);
+        return [...attrsToChips(attributes, manualChips), ...manualChips];
+      });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [rawInput]);
 
   // Live SKU scoring (synchronous, via useMemo)
   // Always show all SKUs after a parse — score 0 when no chips, scored when chips exist.
@@ -396,30 +201,6 @@ export function OrderChat() {
     const attrs = chipsToAttrs(chips.filter((c) => !c.isFlag));
     return matchSKUs(attrs, skus, normalizedStr);
   }, [chips, skus, normalizedStr]);
-
-  function removeChip(id: string) {
-    setChips((prev) => prev.filter((c) => c.id !== id));
-  }
-
-  function addChip(key: string, value: string) {
-    const LABELS: Record<string, string> = {
-      color: "Color", material: "Material", finish: "Finish",
-      mountingType: "Mount", numberOfDoors: "Doors", lockType: "Lock",
-      postalApproved: "Postal Approved", category: "Category",
-      width: "Width", height: "Height",
-    };
-    setChips((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        key,
-        label: LABELS[key] ?? key,
-        value,
-        isFlag: false,
-        isManual: true,
-      },
-    ]);
-  }
 
   async function handleSubmit() {
     const catalogChips = chips.filter((c) => !c.isFlag);
@@ -449,7 +230,6 @@ export function OrderChat() {
       setSubmitted(true);
       setRawInput("");
       setChips([]);
-      setFlags([]);
       setNormalizedStr("");
     } catch {
       setSubmitError("Network error — please try again");
@@ -459,11 +239,6 @@ export function OrderChat() {
   }
 
   const catalogChips = chips.filter((c) => !c.isFlag);
-  const flagChips = chips.filter((c) => c.isFlag);
-  const allFlags = [
-    ...flags,
-    ...flagChips.map((c) => `${c.label}: ${c.value}`),
-  ];
   const topSKUs = scoredSKUs.filter((s) => s.score > 0).slice(0, 6);
   const hasInput = rawInput.trim().length > 0;
 
@@ -477,30 +252,13 @@ export function OrderChat() {
           <textarea
             value={rawInput}
             onChange={(e) => {
-              const val = e.target.value;
-              setRawInput(val);
+              setRawInput(e.target.value);
               setSubmitted(false);
-              if (!val.trim()) {
-                setChips([]);
-                setFlags([]);
-                setNormalizedStr("");
-              }
             }}
-            onKeyDown={(e) => { if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); handleParse(); } }}
-            placeholder="Describe your order in plain language… (Shift+Enter to parse)"
+            placeholder="Describe your order in plain language…"
             rows={5}
             className="w-full resize-none rounded-xl border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleParse}
-            disabled={!rawInput.trim()}
-            className="mt-2 w-full"
-          >
-            Parse Order
-          </Button>
 
           {/* Example prompts */}
           {!hasInput && (
@@ -508,7 +266,7 @@ export function OrderChat() {
               {EXAMPLES.map((ex) => (
                 <button
                   key={ex}
-                  onClick={() => { setRawInput(ex); }}
+                  onClick={() => setRawInput(ex)}
                   className="text-xs rounded-full border border-dashed px-2.5 py-0.5 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
                 >
                   {ex.length > 52 ? ex.slice(0, 52) + "…" : ex}
