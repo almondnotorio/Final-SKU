@@ -448,6 +448,7 @@ export function OrderChat() {
       setRawInput("");
       setChips([]);
       setFlags([]);
+      setNormalizedStr("");
     } catch {
       setSubmitError("Network error — please try again");
     } finally {
